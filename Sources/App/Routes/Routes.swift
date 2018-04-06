@@ -21,5 +21,7 @@ extension Droplet {
         get("description") { req in return req.description }
         
         try resource("posts", PostController.self)
+        
+        socket("rotation", handler: RotationController().rotation)
     }
 }
