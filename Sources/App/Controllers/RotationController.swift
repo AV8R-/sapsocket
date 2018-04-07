@@ -26,6 +26,24 @@ final class RotationController {
             self?.activeConnections[id] = nil
         }
     }
+    
+    func sendRotation(request: Request) throws -> ResponseRepresentable {
+        guard let json = request.json else {
+            throw Abort(.badRequest, reason: "wrong content type. expected application/json")
+        }
+        
+        let rotation: Float = try json.get("rotation")
+        
+        guard 0...8000 ~= rotation else {
+            throw Abort(.badRequest, reason: "rotation parameter must be in range 0...8000")
+        }
+        
+        activeConnections.forEach({ (ws) in
+            try? ws.value.send("\(rotation)")
+        })
+        
+        return Response(status: .ok)
+    }
 }
 
 
