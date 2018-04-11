@@ -22,7 +22,7 @@ extension Droplet {
         
         try resource("posts", PostController.self)
         
-        let controller = RotationController()
+        let controller = RotationController(client: client)
         
         socket("rotation", handler: controller.rotation)
         post("rotation", handler: controller.sendRotation)

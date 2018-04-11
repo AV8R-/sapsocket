@@ -6,10 +6,17 @@
 //
 
 import Foundation
+import Vapor
 
 final class RotationController {
     
     var activeConnections: [Int: WebSocket] = [:]
+    let throttler = Throttler(seconds: 1)
+    let client: ClientFactoryProtocol
+    
+    init(client: ClientFactoryProtocol) {
+        self.client = client
+    }
     
     func rotation(request: Request, ws: WebSocket) throws {
         let id = activeConnections.count
@@ -41,6 +48,15 @@ final class RotationController {
         activeConnections.forEach({ (ws) in
             try? ws.value.send("\(rotation)")
         })
+        
+        throttler.throttle { [client = self.client] in
+            do {
+                dump(try client.post("https://hanacisa731b2d26.hana.ondemand.com/Engine3D/eventpost.xsjs",
+                                     query: [:], [.contentType: "application/json"], JSON(node: ["Rotation": "\(rotation)"])))
+            } catch {
+                print("error sending to SAP server")
+            }
+        }
         
         return Response(status: .ok)
     }
